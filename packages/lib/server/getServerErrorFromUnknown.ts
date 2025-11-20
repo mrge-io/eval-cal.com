@@ -126,7 +126,14 @@ export function getServerErrorFromUnknown(cause: unknown): HttpError {
   }
   if (typeof cause === "string") {
     // @ts-expect-error https://github.com/tc39/proposal-error-cause
-    return new Error(cause, { cause });
+    const error = new Error(cause, { cause });
+    const httpError = getHttpError({ statusCode: 500, cause: error });
+    return new HttpError({
+      statusCode: httpError.statusCode,
+      message: httpError.message,
+      cause: httpError.cause,
+      data: traceId ? { ...tracedData, ...httpError.data, traceId } : httpError.data,
+    });
   }
 
   return new HttpError({
